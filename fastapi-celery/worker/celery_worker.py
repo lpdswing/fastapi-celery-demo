@@ -44,3 +44,25 @@ def add1(self, x, y):
 @celery_app.task(bind=True)
 def beat_task(self):
     return (f'beat task done: {self.request.id}')
+
+
+# 链式任务 return  2n + 1
+@celery_app.task(acks_late=True)
+def arg1(x):
+    return x
+
+@celery_app.task(acks_late=True)
+def arg2(y):
+    return 2 * y
+
+@celery_app.task(acks_late=True)
+def chain_task(z):
+    return z + 1
+
+
+def run_chain_task():
+    '''
+    2 * 3 + 1 = 7
+    '''
+    ch = arg1.s(3) | arg2.s() | chain_task.s()
+    ch()

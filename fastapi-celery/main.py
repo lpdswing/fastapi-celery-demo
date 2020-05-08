@@ -3,7 +3,7 @@ import sys
 from fastapi import FastAPI, BackgroundTasks
 from celery.result import AsyncResult
 from worker.celery_app import celery_app
-from worker.celery_worker import add
+from worker.celery_worker import run_chain_task
 
 app = FastAPI()
 
@@ -34,12 +34,11 @@ async def get_res(id):
 
 @app.get('/call_add')
 async def call_add(background_task: BackgroundTasks):
-    # task =  celery_app.send_task(
-    #     'worker.celery_worker.add', args = [4,5]
-    # )
-    # print(task)
-    # background_task.add_task(background_on_message, task)
-    add.delay(3,4)
+    task =  celery_app.send_task(
+        'worker.celery_worker.add', args = [4,5]
+    )
+    print(task)
+    background_task.add_task(background_on_message, task)
     return {"message": "add called"}
 
 @app.get('/call_add1')
@@ -50,6 +49,11 @@ async def call_add1(background_task: BackgroundTasks):
     print(task)
     background_task.add_task(background_on_message, task)
     return {"message": "add1 called"}
+
+@app.get('/run_chain_task')
+async def chain_task(background_task: BackgroundTasks):
+    run_chain_task()
+    return {"message": "run_chain_task called"}
 
 
 @app.get("/{word}")
@@ -65,4 +69,3 @@ if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app,port=8000)
 
-    # celery worker -A worker.celery_worker -l info  -Q test-queue -P gevent

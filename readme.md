@@ -30,3 +30,26 @@
 - 启动定时任务worker
 
     > celery worker -A worker.celery_worker -l info -P eventlet
+
+## 链式任务
+
+- 启动 worker
+
+ > celery worker -A worker.celery_worker -l info -P eventlet
+
+- 请求接口
+
+ > `http://127.0.0.1:8000/run_chain_task`
+
+- 结果
+
+```shell script
+[2020-05-08 15:44:25,050: INFO/MainProcess] Received task: worker.celery_worker.arg1[b114400a-3077-460d-a29c-206911456532]
+[2020-05-08 15:44:25,066: INFO/MainProcess] Received task: worker.celery_worker.arg2[e7a1bd1c-9716-4934-ac8a-273bd72f4f56]
+[2020-05-08 15:44:25,075: INFO/MainProcess] Task worker.celery_worker.arg1[b114400a-3077-460d-a29c-206911456532] succeeded in 0.031000000002677552s: 3
+[2020-05-08 15:44:25,078: INFO/MainProcess] Received task: worker.celery_worker.chain_task[76f7f14f-21e2-4b10-8d18-cacf4e1bf382]
+[2020-05-08 15:44:25,079: INFO/MainProcess] Task worker.celery_worker.arg2[e7a1bd1c-9716-4934-ac8a-273bd72f4f56] succeeded in 0.0s: 6
+[2020-05-08 15:44:25,081: INFO/MainProcess] Task worker.celery_worker.chain_task[76f7f14f-21e2-4b10-8d18-cacf4e1bf382] succeeded in 0.0s: 7
+
+```
+
