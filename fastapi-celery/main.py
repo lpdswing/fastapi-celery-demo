@@ -1,3 +1,5 @@
+import sys
+
 from fastapi import FastAPI, BackgroundTasks
 from celery.result import AsyncResult
 from worker.celery_app import celery_app
@@ -7,7 +9,12 @@ app = FastAPI()
 
 
 def celery_on_message(body):
-    print(body)
+    if body.get('status') == 'PROGRESS':
+        res = body.get('result')
+        sys.stdout.write(f"\r任务进度: {res.get('process_percent')}%")
+        sys.stdout.flush()
+    else:
+        print(body)
 
 def background_on_message(task):
     print(task.get(on_message=celery_on_message, propagate=False))
@@ -34,6 +41,15 @@ async def call_add(background_task: BackgroundTasks):
     # background_task.add_task(background_on_message, task)
     add.delay(3,4)
     return {"message": "add called"}
+
+@app.get('/call_add1')
+async def call_add1(background_task: BackgroundTasks):
+    task =  celery_app.send_task(
+        'worker.celery_worker.add1', args = [4,5]
+    )
+    print(task)
+    background_task.add_task(background_on_message, task)
+    return {"message": "add1 called"}
 
 
 @app.get("/{word}")
